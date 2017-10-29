@@ -72,5 +72,10 @@ namespace Ya.Music.Downloader
             inCycle = true;
             _winCaptcha = null;
         }
+
+        private void captchaTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }

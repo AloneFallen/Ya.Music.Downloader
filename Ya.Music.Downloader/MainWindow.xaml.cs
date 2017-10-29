@@ -27,23 +27,28 @@ namespace Ya.Music.Downloader
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            statusLabel.Foreground = Brushes.Black;
+
             if (!editUrl.Text.Contains("music.yandex.ru"))
             {
                 MessageBox.Show("Неверная ссылка для парсинга", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var music = Yandex.Music.CreateMusic(editUrl.Text);
+            var music = await Yandex.Music.CreateMusic(editUrl.Text);
             if(music == null)
             {
                 MessageBox.Show("Указанная ссылка не ведет к музыкальным файлам", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
             }
-            music.web.DownloadFileCompleted += (object send, AsyncCompletedEventArgs ev) => { MessageBox.Show("Файл скачан", "Готово", MessageBoxButton.OK, MessageBoxImage.Information); statusLabel.Content = "";  };
+            music.web.DownloadFileCompleted += DownloadProgressFinished;
             music.web.DownloadProgressChanged += DownloadProgressChanged;
-            music.Download();
+
+            await music.Download();
+            statusLabel.Content = "Скачивание завершено";
+            statusLabel.Foreground = Brushes.Green;
         }
 
         private void DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
@@ -55,9 +60,14 @@ namespace Ya.Music.Downloader
 
             statusLabel.Dispatcher.Invoke(() =>
             {
-                statusLabel.Content = e.ProgressPercentage.ToString() + " %";
+                statusLabel.Content = e.ProgressPercentage.ToString() + " %";  // "\n" + "Файлов: "+ 0 + "из " + 10;
             });
             
         }
-    }
+
+        private void DownloadProgressFinished(object send, AsyncCompletedEventArgs ev)
+        {
+
+        }
+}
 }

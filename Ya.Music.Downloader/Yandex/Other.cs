@@ -55,7 +55,10 @@ namespace Ya.Music.Downloader.Yandex
             // Return the hexadecimal string. 
             return sBuilder.ToString();
         }
-
+        public static string GetSafeFilename(string name)
+        {
+            return string.Join("_", name.Split(System.IO.Path.GetInvalidFileNameChars()));
+        }
         
     }
 }

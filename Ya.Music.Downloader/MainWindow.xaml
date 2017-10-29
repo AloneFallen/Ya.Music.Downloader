@@ -11,11 +11,11 @@
          >
     <Grid  >
         <TextBox  x:Name="editUrl"
-            Text="https://music.yandex.ru/album/4543040/track/33823801" Margin="79,45,79,113"
+            Text="https://music.yandex.ru/users/ale-raul/playlists/3" Margin="79,45,79,113"
             Padding="2" Width="276" 
             />
-        <Label Content="Ссылка на песню" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Width="434" HorizontalContentAlignment="Center" />
-        <Button Content="Открыть" Height="25" Margin="154,86,154,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <Label Content="Ссылка на музыку" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top" Width="434" HorizontalContentAlignment="Center" />
+        <Button Content="Получить" Height="25" Margin="154,86,154,0" VerticalAlignment="Top" Click="Button_Click"/>
         <Label Name="statusLabel" Content="" HorizontalAlignment="Left" Margin="10,128,0,0" VerticalAlignment="Top"  HorizontalContentAlignment="Center" Width="414"/>
     </Grid>
 </Window>

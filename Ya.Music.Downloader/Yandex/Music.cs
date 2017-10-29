@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,32 +20,69 @@ namespace Ya.Music.Downloader.Yandex
         public WebClient web;
         public const string baseUrl = "https://music.yandex.ru";
         public static string Cookie { get; private set; }
-        private List<Track> tracks = new List<Track>(150);
+        protected List<Track> tracks = new List<Track>(150);
 
         public Music()
         {
-            web = new WebClient();
+            web = new WebClient()
+            {
+                Encoding = Encoding.UTF8
+            };
+            // TODO: сохранять куки для скачки между запуском программы. Позволит избежать лишних запросов капчи
             if (Cookie != "" && Cookie != null)
                 web.Headers[HttpRequestHeader.Cookie] = Cookie;
         }
 
-        public abstract void Download();
+        public abstract Task Download(string file = null);
+        public abstract Task<bool> ProcessTracksInfo();
 
-        public static Music CreateMusic(string text)
+        public static async Task<Music> CreateMusic(string text)
         {
             var type = Tools.ParseType(text);
+            Music music = null;
             switch (type)
             {
                 case YaType.Track:
-                    return new Yandex.Track(text);
+                    music = new Yandex.Track(text);
+                    break;
                 case YaType.Playlists:
-                    return new Yandex.Playlist(text);
+                    music = new Yandex.Playlist(text);
+                    break;
                 case YaType.Album:
                 case YaType.Unknown:
                 default:
                     return null;
             }
+
+            await music.OnInit();
+            return music;
         }
+        protected async static Task<Music> CreateMusic(JToken item, YaType type)
+        {
+            Music music = null;
+            switch (type)
+            {
+                case YaType.Track:
+                    music = new Yandex.Track(item);
+                    break;
+                default:
+                    return null;
+            }
+
+            await music.OnInit(item);
+            return music;
+        }
+
+        /// <summary>
+        /// Производит дополнительную инициализацию класса после выполнения конструктора
+        /// </summary>
+        /// <param name="json">Json-данные необходимые для инициализации. Необязательный параметр</param>
+        /// <returns></returns>
+        protected async virtual Task OnInit(JToken json = null)
+        {
+            await Task.Run(() => { });
+        }
+
         public static string GetIdFromUrl(string url, YaType type)
         {
             string id = "-1";
@@ -71,7 +109,11 @@ namespace Ya.Music.Downloader.Yandex
         }
         public static bool TryAnswerCaptcha(ref string str)
         {
-            WebClient webClient = new WebClient();
+            WebClient webClient = new WebClient()
+            {
+                Encoding = Encoding.UTF8
+            };
+
             while (str.Contains("<!DOCTYPE html>") && Captcha.inCycle)
             {
                 // Парсим html, чтобы найти форму с капчей и параметрами
@@ -84,7 +126,7 @@ namespace Ya.Music.Downloader.Yandex
                 var inputs = form.Descendants("input");
                 foreach (var item in inputs)
                 {
-                    postKeys.Add(item.GetAttributeValue("name", ""), item.GetAttributeValue("value", ""));
+                    postKeys.Add(item.GetAttributeValue("name", ""), WebUtility.HtmlDecode(item.GetAttributeValue("value", "")));
                 }
 
                 // Скачиваем картинку с капчей чтобы отобразить в форме
